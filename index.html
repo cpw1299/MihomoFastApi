@@ -1,769 +1,232 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clash 节点控制台</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family:
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                "Microsoft YaHei",
-                sans-serif;
-            background: #f5f6f8;
-            color: #222;
-        }
-
-        .container {
-            width: min(900px, calc(100% - 32px));
-            margin: 40px auto;
-        }
-
-        .header {
-            margin-bottom: 24px;
-        }
-
-        .header h1 {
-            margin: 0 0 8px;
-            font-size: 28px;
-        }
-
-        .header p {
-            margin: 0;
-            color: #777;
-            font-size: 14px;
-        }
-
-        .card {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        }
-
-        .card-title {
-            font-size: 14px;
-            color: #777;
-            margin-bottom: 12px;
-        }
-
-        .current-node {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 20px;
-            font-weight: 600;
-            word-break: break-all;
-        }
-
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #22c55e;
-            flex-shrink: 0;
-        }
-
-        .status-dot.error {
-            background: #ef4444;
-        }
-
-        .status-dot.loading {
-            background: #f59e0b;
-        }
-
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-
-        .toolbar-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        button {
-            border: 0;
-            border-radius: 8px;
-            padding: 9px 14px;
-            background: #111827;
-            color: #fff;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        button:hover {
-            opacity: 0.88;
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .api-status {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .api-status.success {
-            color: #16a34a;
-        }
-
-        .api-status.error {
-            color: #dc2626;
-        }
-
-        .node-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .node {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 13px 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 9px;
-            cursor: pointer;
-            transition: 0.15s;
-        }
-
-        .node:hover {
-            background: #f9fafb;
-            border-color: #cbd5e1;
-        }
-
-        .node.current {
-            border-color: #22c55e;
-            background: #f0fdf4;
-        }
-
-        .node-name {
-            word-break: break-all;
-            line-height: 1.5;
-        }
-
-        .node-right {
-            flex-shrink: 0;
-            font-size: 12px;
-        }
-
-        .current-label {
-            color: #16a34a;
-            font-weight: 600;
-        }
-
-        .node-index {
-            color: #999;
-        }
-
-        .empty {
-            padding: 30px;
-            text-align: center;
-            color: #999;
-        }
-
-        .error-message {
-            margin-top: 12px;
-            padding: 12px;
-            border-radius: 8px;
-            background: #fef2f2;
-            color: #b91c1c;
-            font-size: 13px;
-            line-height: 1.6;
-            word-break: break-word;
-        }
-
-        .footer {
-            text-align: center;
-            color: #999;
-            font-size: 12px;
-            margin-top: 20px;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                width: calc(100% - 20px);
-                margin: 20px auto;
-            }
-
-            .card {
-                padding: 15px;
-            }
-
-            .current-node {
-                font-size: 17px;
-            }
-
-            .toolbar {
-                align-items: flex-start;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mihomo 节点控制台</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#f5f7fb;--card:#fff;--border:#e5e7eb;--text:#111827;--muted:#6b7280;--green:#16a34a;--red:#dc2626;--orange:#d97706;--blue:#2563eb}
+body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.container{width:min(1100px,calc(100% - 28px));margin:28px auto 40px}.header{margin-bottom:18px}.header h1{margin:0 0 6px;font-size:28px}.header p{margin:0;color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.035)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.toolbar-left,.toolbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.title{font-weight:700}.muted{color:var(--muted);font-size:13px}
+button{border:0;border-radius:8px;padding:9px 13px;background:#111827;color:#fff;cursor:pointer;font-size:13px;white-space:nowrap}button:hover{opacity:.88}button:disabled{opacity:.45;cursor:not-allowed}.btn-blue{background:var(--blue)}.btn-light{background:#eef2f7;color:#374151}.btn-danger{background:#b91c1c}
+.current{display:flex;align-items:center;gap:12px;margin-top:12px;font-size:19px;font-weight:700;word-break:break-all}.dot{width:11px;height:11px;border-radius:50%;background:#22c55e;flex:none}.dot.loading{background:#f59e0b}.dot.error{background:#ef4444}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}.stat{border:1px solid var(--border);border-radius:10px;padding:10px 12px}.stat b{display:block;font-size:20px}.stat span{color:var(--muted);font-size:12px}
+.settings{display:grid;grid-template-columns:1.4fr 1.4fr .7fr .7fr;gap:10px;margin-top:14px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}.field input{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:9px 10px;font-size:13px;outline:none;background:#fff}.field input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.search{width:240px;max-width:100%;border:1px solid #d1d5db;border-radius:8px;padding:9px 10px;font-size:13px}
+.node-list{display:flex;flex-direction:column;gap:7px;margin-top:13px}.node{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--border);border-radius:10px;transition:.15s}.node:hover{background:#f9fafb;border-color:#cbd5e1}.node.current{border-color:#86efac;background:#f0fdf4}.node-main{min-width:0}.node-name{font-size:14px;line-height:1.45;word-break:break-all}.node-meta{display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap}.badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;background:#f3f4f6;color:#6b7280;font-size:11px}.badge.current{background:#dcfce7;color:#15803d}.latency{min-width:74px;text-align:right;font-weight:700;font-size:14px}.latency.good{color:#16a34a}.latency.warn{color:#d97706}.latency.bad{color:#dc2626}.latency.loading{color:#9ca3af;font-weight:500}.node-actions{display:flex;gap:6px}.node-actions button{padding:7px 10px;font-size:12px}
+.empty{text-align:center;color:var(--muted);padding:28px 10px}.error{margin-top:12px;padding:10px 12px;background:#fef2f2;color:#991b1b;border-radius:9px;font-size:13px;line-height:1.5;word-break:break-word}.status{font-size:12px;color:var(--muted)}.status.success{color:var(--green)}.status.error{color:var(--red)}
+.footer{text-align:center;color:#9ca3af;font-size:11px;margin-top:18px}
+@media(max-width:760px){.settings{grid-template-columns:1fr 1fr}.stats{grid-template-columns:repeat(2,1fr)}.node{grid-template-columns:minmax(0,1fr) auto}.node-actions{grid-column:1/-1}.latency{min-width:auto}.search{width:100%}}
+@media(max-width:480px){.container{width:calc(100% - 18px);margin-top:18px}.card{padding:14px}.settings{grid-template-columns:1fr}.toolbar-right{width:100%}.toolbar-right button{flex:1}.current{font-size:17px}}
+</style>
 </head>
-
 <body>
-
 <div class="container">
+  <div class="header">
+    <h1>Mihomo 节点控制台</h1>
+    <p>管理 PROXY 代理组，并使用 Mihomo Controller API 测试节点延迟</p>
+  </div>
 
-    <div class="header">
-        <h1>Clash 节点控制台</h1>
-        <p>通过 Clash Controller API 管理 PROXY 代理组</p>
+  <div class="card">
+    <div class="muted">当前代理组</div>
+    <div style="margin-top:5px;font-weight:700">PROXY</div>
+    <div class="muted" style="margin-top:15px">当前节点</div>
+    <div class="current"><span id="currentDot" class="dot loading"></span><span id="currentNode">正在读取...</span></div>
+    <div class="stats">
+      <div class="stat"><b id="totalCount">0</b><span>节点</span></div>
+      <div class="stat"><b id="okCount">0</b><span>测试成功</span></div>
+      <div class="stat"><b id="failCount">0</b><span>测试失败</span></div>
+      <div class="stat"><b id="avgLatency">-</b><span>平均延迟</span></div>
     </div>
+  </div>
 
-    <!-- 当前节点 -->
-    <div class="card">
-        <div class="card-title">
-            当前代理组
-        </div>
-
-        <div style="margin-bottom: 16px; font-weight: 600;">
-            PROXY
-        </div>
-
-        <div class="card-title">
-            当前节点
-        </div>
-
-        <div class="current-node">
-            <span id="currentDot" class="status-dot loading"></span>
-            <span id="currentNode">正在读取...</span>
-        </div>
+  <div class="card">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <span class="title">测试设置</span>
+        <span id="testStatus" class="status">未开始测试</span>
+      </div>
+      <div class="toolbar-right">
+        <button id="refreshButton" class="btn-light" onclick="loadProxies()">刷新</button>
+        <button id="testAllButton" class="btn-blue" onclick="testAllNodes()">测试全部节点</button>
+      </div>
     </div>
-
-    <!-- 节点列表 -->
-    <div class="card">
-
-        <div class="toolbar">
-
-            <div class="toolbar-left">
-                <div class="card-title" style="margin: 0;">
-                    节点列表
-                </div>
-
-                <span id="nodeCount" class="node-index">
-                    0 个节点
-                </span>
-            </div>
-
-            <button id="refreshButton" onclick="loadProxies()">
-                刷新
-            </button>
-
-        </div>
-
-        <div id="nodeList" class="node-list">
-            <div class="empty">
-                正在读取节点...
-            </div>
-        </div>
-
+    <div class="settings">
+      <div class="field"><label>Controller API</label><input id="apiBase" value="http://127.0.0.1:9090"></div>
+      <div class="field"><label>延迟测试 URL</label><input id="testUrl" value="https://www.gstatic.com/generate_204"></div>
+      <div class="field"><label>超时（ms）</label><input id="timeout" type="number" min="500" max="60000" value="5000"></div>
+      <div class="field"><label>期望状态</label><input id="expected" value="204" placeholder="例如 204 或 200-299"></div>
     </div>
+    <div class="field" style="margin-top:10px"><label>Secret（可选，留空表示不使用）</label><input id="secret" type="password" placeholder="Authorization: Bearer ..."></div>
+  </div>
 
-    <!-- API 状态 -->
-    <div class="card">
-
-        <div class="card-title">
-            Controller API
-        </div>
-
-        <div class="api-status" id="apiStatus">
-            正在连接...
-        </div>
-
-        <div id="errorMessage"></div>
-
+  <div class="card">
+    <div class="toolbar">
+      <div class="toolbar-left"><span class="title">节点列表</span><span id="nodeCount" class="muted">0 个节点</span></div>
+      <div class="toolbar-right"><input id="searchInput" class="search" placeholder="搜索节点..." oninput="renderNodeList()"><select id="sortSelect" class="search" onchange="renderNodeList()"><option value="default">默认顺序</option><option value="latency">按延迟升序</option><option value="name">按名称</option></select></div>
     </div>
+    <div id="nodeList" class="node-list"><div class="empty">正在读取节点...</div></div>
+  </div>
 
-    <div class="footer">
-        Clash Controller：127.0.0.1:9090
-    </div>
-
+  <div class="card">
+    <div class="muted">Controller API 状态</div>
+    <div id="apiStatus" class="status" style="margin-top:6px">正在连接...</div>
+    <div id="errorMessage"></div>
+  </div>
+  <div class="footer">Mihomo Controller：127.0.0.1:9090 · 延迟测试使用 /group/{name}/delay 和 /proxies/{name}/delay</div>
 </div>
 
-
 <script>
+const PROXY_GROUP = "PROXY";
+const REFRESH_INTERVAL = 5000;
+const GROUP_TYPES = new Set(["Selector","URLTest","Fallback","LoadBalance","Relay"]);
+const SPECIAL_TYPES = new Set(["DIRECT","REJECT","COMPATIBLE","PASS"]);
+let proxyData = {};
+let nodes = [];
+let currentNode = "";
+let loading = false;
+let testingAll = false;
+const latency = new Map();
 
-    // ============================================
-    // 配置
-    // ============================================
+const $ = id => document.getElementById(id);
+const apiBase = () => ($("apiBase").value.trim() || "http://127.0.0.1:9090").replace(/\/+$/, "");
+function headers(){const h={};const s=$("secret").value.trim();if(s)h.Authorization=s.startsWith("Bearer ")?s:`Bearer ${s}`;return h}
+function settings(){
+  const timeout=Math.max(500,Math.min(60000,Number($("timeout").value)||5000));
+  return {url:$("testUrl").value.trim()||"https://www.gstatic.com/generate_204",timeout,expected:$("expected").value.trim()};
+}
+function formatTime(d){return d.toLocaleTimeString([], {hour12:false})}
+function setStatus(text,type=""){ $("apiStatus").textContent=text; $("apiStatus").className=`status ${type}` }
+function setTestStatus(text,type=""){ $("testStatus").textContent=text; $("testStatus").className=`status ${type}` }
+function errorText(e){return e?.message||String(e)}
+function showError(e){$("errorMessage").innerHTML="";const d=document.createElement("div");d.className="error";d.textContent=errorText(e);$("errorMessage").appendChild(d)}
+function clearError(){$("errorMessage").innerHTML=""}
 
-    const API_BASE = "http://127.0.0.1:9090";
+async function api(path, options={}){
+  const res=await fetch(apiBase()+path,{cache:"no-store",...options,headers:{...headers(),...(options.headers||{})}});
+  if(!res.ok){let text="";try{text=await res.text()}catch(_){}throw new Error(`HTTP ${res.status}${text?`：${text.slice(0,300)}`:""}`)}
+  if(res.status===204)return null;
+  return res.json();
+}
 
-    // 当前使用的代理组
-    const PROXY_GROUP = "PROXY";
+async function loadProxies(silent=false){
+  if(loading)return;
+  loading=true;$("refreshButton").disabled=true;$("refreshButton").textContent="读取中...";$("currentDot").className="dot loading";
+  try{
+    const data=await api("/proxies");
+    if(!data?.proxies?.[PROXY_GROUP])throw new Error(`API 返回中没有找到代理组：${PROXY_GROUP}`);
+    proxyData=data.proxies;
+    const group=data.proxies[PROXY_GROUP];
+    currentNode=group.now||"";
+    nodes=(Array.isArray(group.all)?group.all:[]).map(name=>({name,info:data.proxies[name]||{name,type:"未知"}}));
+    if(currentNode&&!nodes.some(n=>n.name===currentNode))nodes.unshift({name:currentNode,info:data.proxies[currentNode]||{name:currentNode,type:"未知"}});
+    $("currentNode").textContent=currentNode||"暂无当前节点";
+    $("currentDot").className=`dot ${currentNode?"":"error"}`;
+    renderNodeList();updateStats();
+    setStatus(`连接正常 · ${formatTime(new Date())}`,"success");
+    if(!silent)clearError();
+  }catch(e){
+    console.error(e);setStatus("无法连接 Controller API","error");showError(e);$("currentNode").textContent="无法读取当前节点";$("currentDot").className="dot error";
+  }finally{loading=false;$("refreshButton").disabled=false;$("refreshButton").textContent="刷新"}
+}
 
-    // 自动刷新间隔
-    const REFRESH_INTERVAL = 5000;
+function testable(node){
+  const type=String(node.info?.type||"");
+  return !SPECIAL_TYPES.has(type.toUpperCase())&&!GROUP_TYPES.has(type);
+}
+function latencyText(value){
+  if(value===undefined)return {text:"未测试",cls:"loading"};
+  if(value===null)return {text:"失败",cls:"bad"};
+  const cls=value<=150?"good":value<=500?"warn":"bad";
+  return {text:`${value} ms`,cls};
+}
+function renderNodeList(){
+  const q=$("searchInput").value.trim().toLowerCase();
+  let list=nodes.filter(n=>n.name.toLowerCase().includes(q));
+  const sort=$("sortSelect").value;
+  if(sort==="name")list.sort((a,b)=>a.name.localeCompare(b.name,"zh-CN"));
+  if(sort==="latency")list.sort((a,b)=>{
+    const av=latency.get(a.name),bv=latency.get(b.name);const ax=av==null?Infinity:av,bx=bv==null?Infinity:bv;return ax-bx||a.name.localeCompare(b.name,"zh-CN")
+  });
+  $("nodeCount").textContent=`${nodes.length} 个节点`;
+  const box=$("nodeList");box.innerHTML="";
+  if(!list.length){box.innerHTML=`<div class="empty">没有匹配的节点</div>`;return}
+  list.forEach((node,index)=>{
+    const row=document.createElement("div");row.className=`node ${node.name===currentNode?"current":""}`;
+    const main=document.createElement("div");main.className="node-main";
+    const name=document.createElement("div");name.className="node-name";name.textContent=node.name;
+    const meta=document.createElement("div");meta.className="node-meta";
+    const type=document.createElement("span");type.className="badge";type.textContent=node.info?.type||"未知";meta.appendChild(type);
+    if(node.name===currentNode){const b=document.createElement("span");b.className="badge current";b.textContent="当前";meta.appendChild(b)}
+    main.append(name,meta);
+    const l=latencyText(latency.get(node.name));const lat=document.createElement("div");lat.className=`latency ${l.cls}`;lat.textContent=l.text;
+    const actions=document.createElement("div");actions.className="node-actions";
+    const test=document.createElement("button");test.className="btn-light";test.textContent=latency.get(node.name)===undefined?"测试延迟":"重新测试";test.disabled=testingAll||!testable(node);test.title=testable(node)?"测试此节点延迟":"此类型不支持直接延迟测试";test.onclick=e=>{e.stopPropagation();testNode(node.name)};
+    const select=document.createElement("button");select.className="btn-light";select.textContent="切换";select.disabled=node.name===currentNode;select.onclick=e=>{e.stopPropagation();selectNode(node.name)};
+    actions.append(test,select);row.append(main,lat,actions);box.appendChild(row);
+  });
+}
 
+async function testNode(name){
+  const node=nodes.find(n=>n.name===name);if(!node||!testable(node))return;
+  latency.set(name,"loading");renderNodeList();setTestStatus(`正在测试：${name}`);
+  try{
+    const s=settings();const qs=new URLSearchParams({url:s.url,timeout:String(s.timeout)});if(s.expected)qs.set("expected",s.expected);
+    const data=await api(`/proxies/${encodeURIComponent(name)}/delay?${qs}`);
+    const value=Number(data?.delay);if(!Number.isFinite(value))throw new Error("API 未返回有效 delay");
+    latency.set(name,value);setTestStatus(`${name} · ${value} ms`,"success");
+  }catch(e){console.error(e);latency.set(name,null);setTestStatus(`${name} · 测试失败`,"error")}
+  updateStats();renderNodeList();
+}
 
-    // ============================================
-    // DOM
-    // ============================================
-
-    const currentNodeElement =
-        document.getElementById("currentNode");
-
-    const currentDotElement =
-        document.getElementById("currentDot");
-
-    const nodeListElement =
-        document.getElementById("nodeList");
-
-    const nodeCountElement =
-        document.getElementById("nodeCount");
-
-    const apiStatusElement =
-        document.getElementById("apiStatus");
-
-    const errorMessageElement =
-        document.getElementById("errorMessage");
-
-    const refreshButton =
-        document.getElementById("refreshButton");
-
-
-    // ============================================
-    // 状态
-    // ============================================
-
-    let currentNode = "";
-
-    let loading = false;
-
-
-    // ============================================
-    // 获取全部代理
-    // ============================================
-
-    async function loadProxies() {
-
-        if (loading) {
-            return;
-        }
-
-        loading = true;
-
-        setLoadingState();
-
-        try {
-
-            const response = await fetch(
-                `${API_BASE}/proxies`,
-                {
-                    method: "GET",
-                    cache: "no-store"
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(
-                    `HTTP ${response.status} ${response.statusText}`
-                );
-            }
-
-            const data = await response.json();
-
-            // 检查返回结构
-            if (
-                !data ||
-                !data.proxies ||
-                !data.proxies[PROXY_GROUP]
-            ) {
-                throw new Error(
-                    `API 返回中没有找到代理组：${PROXY_GROUP}`
-                );
-            }
-
-            const proxy = data.proxies[PROXY_GROUP];
-
-            // 当前节点
-            currentNode = proxy.now || "";
-
-            // all 可能不存在
-            let nodes = Array.isArray(proxy.all)
-                ? [...proxy.all]
-                : [];
-
-            /*
-             * 有一种情况：
-             *
-             * now 存在，
-             * 但是 now 不在 all 中。
-             *
-             * 为了保证页面一定能显示当前节点，
-             * 把 now 加入列表最前面。
-             */
-            if (
-                currentNode &&
-                !nodes.includes(currentNode)
-            ) {
-                nodes.unshift(currentNode);
-            }
-
-            renderCurrentNode(currentNode);
-
-            renderNodeList(nodes, currentNode);
-
-            setApiSuccess(
-                `连接正常 · 最后更新：${formatTime(new Date())}`
-            );
-
-            clearError();
-
-        } catch (error) {
-
-            console.error(error);
-
-            setApiError(
-                "无法连接 Clash Controller API"
-            );
-
-            showError(error);
-
-            currentNodeElement.textContent =
-                "无法读取当前节点";
-
-            currentDotElement.className =
-                "status-dot error";
-
-        } finally {
-
-            loading = false;
-
-            refreshButton.disabled = false;
-            refreshButton.textContent = "刷新";
-        }
+async function testAllNodes(){
+  if(testingAll||!nodes.length)return;
+  testingAll=true;$("testAllButton").disabled=true;$("testAllButton").textContent="测试中...";clearError();
+  const targets=nodes.filter(testable);targets.forEach(n=>latency.set(n.name,"loading"));renderNodeList();updateStats();
+  const s=settings();const qs=new URLSearchParams({url:s.url,timeout:String(s.timeout)});if(s.expected)qs.set("expected",s.expected);
+  let groupSuccess=false;
+  try{
+    setTestStatus(`正在批量测试 0/${targets.length}...`);
+    const data=await api(`/group/${encodeURIComponent(PROXY_GROUP)}/delay?${qs}`);
+    if(data&&typeof data==="object"){
+      targets.forEach(n=>{if(Object.prototype.hasOwnProperty.call(data,n.name)){const v=Number(data[n.name]);latency.set(n.name,Number.isFinite(v)?v:null)}});
+      groupSuccess=true;
     }
-
-
-    // ============================================
-    // 显示当前节点
-    // ============================================
-
-    function renderCurrentNode(node) {
-
-        if (!node) {
-
-            currentNodeElement.textContent =
-                "暂无当前节点";
-
-            currentDotElement.className =
-                "status-dot error";
-
-            return;
-        }
-
-        currentNodeElement.textContent = node;
-
-        currentDotElement.className =
-            "status-dot";
-    }
-
-
-    // ============================================
-    // 显示节点列表
-    // ============================================
-
-    function renderNodeList(nodes, current) {
-
-        nodeListElement.innerHTML = "";
-
-        nodeCountElement.textContent =
-            `${nodes.length} 个节点`;
-
-        if (nodes.length === 0) {
-
-            nodeListElement.innerHTML = `
-                <div class="empty">
-                    PROXY 代理组没有节点
-                </div>
-            `;
-
-            return;
-        }
-
-        nodes.forEach((node, index) => {
-
-            const element =
-                document.createElement("div");
-
-            element.className =
-                "node" +
-                (node === current ? " current" : "");
-
-            const name =
-                document.createElement("div");
-
-            name.className = "node-name";
-
-            name.textContent = node;
-
-            const right =
-                document.createElement("div");
-
-            right.className = "node-right";
-
-            if (node === current) {
-
-                right.innerHTML =
-                    `<span class="current-label">当前</span>`;
-
-            } else {
-
-                right.innerHTML =
-                    `<span class="node-index">#${index + 1}</span>`;
-            }
-
-            element.appendChild(name);
-            element.appendChild(right);
-
-            element.addEventListener(
-                "click",
-                () => selectNode(node)
-            );
-
-            nodeListElement.appendChild(element);
-
-        });
-    }
-
-
-    // ============================================
-    // 切换节点
-    // ============================================
-
-    async function selectNode(node) {
-
-        if (!node) {
-            return;
-        }
-
-        if (node === currentNode) {
-            return;
-        }
-
-        try {
-
-            setLoadingState();
-
-            clearError();
-
-            /*
-             * Clash API：
-             *
-             * PUT /proxies/{proxy group}
-             *
-             * Body:
-             * {
-             *     "name": "节点名称"
-             * }
-             */
-
-            const response = await fetch(
-                `${API_BASE}/proxies/${encodeURIComponent(PROXY_GROUP)}`,
-                {
-                    method: "PUT",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        name: node
-                    })
-                }
-            );
-
-            if (!response.ok) {
-
-                let message =
-                    `HTTP ${response.status}`;
-
-                try {
-
-                    const text =
-                        await response.text();
-
-                    if (text) {
-                        message += `：${text}`;
-                    }
-
-                } catch (_) {}
-
-                throw new Error(message);
-            }
-
-            /*
-             * 切换成功后重新读取 API，
-             * 不直接假设切换成功。
-             */
-            await loadProxies();
-
-            setApiSuccess(
-                `已切换节点：${node}`
-            );
-
-        } catch (error) {
-
-            console.error(error);
-
-            setApiError(
-                "节点切换失败"
-            );
-
-            showError(error);
-
-            // 重新读取一次真实状态
-            await loadProxies();
-
-        }
-    }
-
-
-    // ============================================
-    // Loading 状态
-    // ============================================
-
-    function setLoadingState() {
-
-        refreshButton.disabled = true;
-        refreshButton.textContent = "读取中...";
-
-        currentDotElement.className =
-            "status-dot loading";
-    }
-
-
-    // ============================================
-    // API 成功
-    // ============================================
-
-    function setApiSuccess(message) {
-
-        apiStatusElement.textContent =
-            message;
-
-        apiStatusElement.className =
-            "api-status success";
-    }
-
-
-    // ============================================
-    // API 错误
-    // ============================================
-
-    function setApiError(message) {
-
-        apiStatusElement.textContent =
-            message;
-
-        apiStatusElement.className =
-            "api-status error";
-    }
-
-
-    // ============================================
-    // 错误信息
-    // ============================================
-
-    function showError(error) {
-
-        errorMessageElement.innerHTML = "";
-
-        const div =
-            document.createElement("div");
-
-        div.className =
-            "error-message";
-
-        /*
-         * 浏览器直接打开 file:// 页面时，
-         * fetch localhost API 可能遇到 CORS 限制。
-         *
-         * 这里给出比较明确的提示。
-         */
-
-        if (
-            error instanceof TypeError
-        ) {
-
-            div.textContent =
-                "浏览器无法访问 127.0.0.1:9090。"
-                + " 如果 Clash API 实际正常，请检查 CORS 配置，"
-                + " 或使用本地 HTTP 服务打开这个 HTML。";
-
-        } else {
-
-            div.textContent =
-                error.message || String(error);
-        }
-
-        errorMessageElement.appendChild(div);
-    }
-
-
-    // ============================================
-    // 清除错误
-    // ============================================
-
-    function clearError() {
-
-        errorMessageElement.innerHTML = "";
-    }
-
-
-    // ============================================
-    // 时间格式
-    // ============================================
-
-    function formatTime(date) {
-
-        return date.toLocaleTimeString(
-            "zh-CN",
-            {
-                hour12: false
-            }
-        );
-    }
-
-
-    // ============================================
-    // 启动
-    // ============================================
-
-    loadProxies();
-
-
-    // ============================================
-    // 自动刷新
-    // ============================================
-
-    setInterval(
-        loadProxies,
-        REFRESH_INTERVAL
-    );
-
+  }catch(e){console.warn("group delay failed, fallback to individual tests",e)}
+  const missing=targets.filter(n=>latency.get(n.name)==="loading"||latency.get(n.name)===undefined);
+  if(!groupSuccess||missing.length){
+    let done=targets.length-missing.length;
+    const concurrency=6;let cursor=0;
+    async function worker(){while(cursor<missing.length){const i=cursor++;const n=missing[i];setTestStatus(`正在测试 ${Math.min(done+1,targets.length)}/${targets.length}...`);await testNodeQuiet(n.name);done++}}
+    await Promise.all(Array.from({length:Math.min(concurrency,Math.max(1,missing.length))},worker));
+  }
+  const ok=targets.filter(n=>typeof latency.get(n.name)==="number").length;
+  const failed=targets.length-ok;setTestStatus(`批量测试完成 · 成功 ${ok} · 失败 ${failed}`,ok?"success":"error");
+  testingAll=false;$("testAllButton").disabled=false;$("testAllButton").textContent="测试全部节点";updateStats();renderNodeList();
+}
+
+async function testNodeQuiet(name){
+  try{const s=settings();const qs=new URLSearchParams({url:s.url,timeout:String(s.timeout)});if(s.expected)qs.set("expected",s.expected);const data=await api(`/proxies/${encodeURIComponent(name)}/delay?${qs}`);const v=Number(data?.delay);latency.set(name,Number.isFinite(v)?v:null)}catch(_){latency.set(name,null)}
+  updateStats();renderNodeList();
+}
+
+async function selectNode(name){
+  if(!name||name===currentNode)return;
+  try{setStatus(`正在切换：${name}`);await api(`/proxies/${encodeURIComponent(PROXY_GROUP)}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({name})});await loadProxies(true);setStatus(`已切换节点：${name}`,"success")}
+  catch(e){console.error(e);setStatus("节点切换失败","error");showError(e);await loadProxies(true)}
+}
+function updateStats(){
+  const values=nodes.filter(testable).map(n=>latency.get(n.name)).filter(v=>typeof v==="number");
+  const ok=values.length,failed=nodes.filter(testable).filter(n=>latency.get(n.name)===null).length;
+  $("totalCount").textContent=nodes.filter(testable).length;$("okCount").textContent=ok;$("failCount").textContent=failed;$("avgLatency").textContent=ok?`${Math.round(values.reduce((a,b)=>a+b,0)/ok)} ms`:"-";
+}
+
+$("apiBase").addEventListener("change",()=>loadProxies());
+loadProxies();
+setInterval(()=>loadProxies(true),REFRESH_INTERVAL);
 </script>
-
 </body>
 </html>
