@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clash 节点控制台</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                "Microsoft YaHei",
+                sans-serif;
+            background: #f5f6f8;
+            color: #222;
+        }
+
+        .container {
+            width: min(900px, calc(100% - 32px));
+            margin: 40px auto;
+        }
+
+        .header {
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
+
+        .header p {
+            margin: 0;
+            color: #777;
+            font-size: 14px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 12px;
+        }
+
+        .current-node {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #22c55e;
+            flex-shrink: 0;
+        }
+
+        .status-dot.error {
+            background: #ef4444;
+        }
+
+        .status-dot.loading {
+            background: #f59e0b;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 8px;
+            padding: 9px 14px;
+            background: #111827;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            opacity: 0.88;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .api-status {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .api-status.success {
+            color: #16a34a;
+        }
+
+        .api-status.error {
+            color: #dc2626;
+        }
+
+        .node-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .node {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 13px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .node:hover {
+            background: #f9fafb;
+            border-color: #cbd5e1;
+        }
+
+        .node.current {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
+        .node-name {
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        .node-right {
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+
+        .current-label {
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .node-index {
+            color: #999;
+        }
+
+        .empty {
+            padding: 30px;
+            text-align: center;
+            color: #999;
+        }
+
+        .error-message {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #fef2f2;
+            color: #b91c1c;
+            font-size: 13px;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: calc(100% - 20px);
+                margin: 20px auto;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .current-node {
+                font-size: 17px;
+            }
+
+            .toolbar {
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Clash 节点控制台</h1>
+        <p>通过 Clash Controller API 管理 PROXY 代理组</p>
+    </div>
+
+    <!-- 当前节点 -->
+    <div class="card">
+        <div class="card-title">
+            当前代理组
+        </div>
+
+        <div style="margin-bottom: 16px; font-weight: 600;">
+            PROXY
+        </div>
+
+        <div class="card-title">
+            当前节点
+        </div>
+
+        <div class="current-node">
+            <span id="currentDot" class="status-dot loading"></span>
+            <span id="currentNode">正在读取...</span>
+        </div>
+    </div>
+
+    <!-- 节点列表 -->
+    <div class="card">
+
+        <div class="toolbar">
+
+            <div class="toolbar-left">
+                <div class="card-title" style="margin: 0;">
+                    节点列表
+                </div>
+
+                <span id="nodeCount" class="node-index">
+                    0 个节点
+                </span>
+            </div>
+
+            <button id="refreshButton" onclick="loadProxies()">
+                刷新
+            </button>
+
+        </div>
+
+        <div id="nodeList" class="node-list">
+            <div class="empty">
+                正在读取节点...
+            </div>
+        </div>
+
+    </div>
+
+    <!-- API 状态 -->
+    <div class="card">
+
+        <div class="card-title">
+            Controller API
+        </div>
+
+        <div class="api-status" id="apiStatus">
+            正在连接...
+        </div>
+
+        <div id="errorMessage"></div>
+
+    </div>
+
+    <div class="footer">
+        Clash Controller：127.0.0.1:9090
+    </div>
+
+</div>
+
+
+<script>
+
+    // ============================================
+    // 配置
+    // ============================================
+
+    const API_BASE = "http://127.0.0.1:9090";
+
+    // 当前使用的代理组
+    const PROXY_GROUP = "PROXY";
+
+    // 自动刷新间隔
+    const REFRESH_INTERVAL = 5000;
+
+
+    // ============================================
+    // DOM
+    // ============================================
+
+    const currentNodeElement =
+        document.getElementById("currentNode");
+
+    const currentDotElement =
+        document.getElementById("currentDot");
+
+    const nodeListElement =
+        document.getElementById("nodeList");
+
+    const nodeCountElement =
+        document.getElementById("nodeCount");
+
+    const apiStatusElement =
+        document.getElementById("apiStatus");
+
+    const errorMessageElement =
+        document.getElementById("errorMessage");
+
+    const refreshButton =
+        document.getElementById("refreshButton");
+
+
+    // ============================================
+    // 状态
+    // ============================================
+
+    let currentNode = "";
+
+    let loading = false;
+
+
+    // ============================================
+    // 获取全部代理
+    // ============================================
+
+    async function loadProxies() {
+
+        if (loading) {
+            return;
+        }
+
+        loading = true;
+
+        setLoadingState();
+
+        try {
+
+            const response = await fetch(
+                `${API_BASE}/proxies`,
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `HTTP ${response.status} ${response.statusText}`
+                );
+            }
+
+            const data = await response.json();
+
+            // 检查返回结构
+            if (
+                !data ||
+                !data.proxies ||
+                !data.proxies[PROXY_GROUP]
+            ) {
+                throw new Error(
+                    `API 返回中没有找到代理组：${PROXY_GROUP}`
+                );
+            }
+
+            const proxy = data.proxies[PROXY_GROUP];
+
+            // 当前节点
+            currentNode = proxy.now || "";
+
+            // all 可能不存在
+            let nodes = Array.isArray(proxy.all)
+                ? [...proxy.all]
+                : [];
+
+            /*
+             * 有一种情况：
+             *
+             * now 存在，
+             * 但是 now 不在 all 中。
+             *
+             * 为了保证页面一定能显示当前节点，
+             * 把 now 加入列表最前面。
+             */
+            if (
+                currentNode &&
+                !nodes.includes(currentNode)
+            ) {
+                nodes.unshift(currentNode);
+            }
+
+            renderCurrentNode(currentNode);
+
+            renderNodeList(nodes, currentNode);
+
+            setApiSuccess(
+                `连接正常 · 最后更新：${formatTime(new Date())}`
+            );
+
+            clearError();
+
+        } catch (error) {
+
+            console.error(error);
+
+            setApiError(
+                "无法连接 Clash Controller API"
+            );
+
+            showError(error);
+
+            currentNodeElement.textContent =
+                "无法读取当前节点";
+
+            currentDotElement.className =
+                "status-dot error";
+
+        } finally {
+
+            loading = false;
+
+            refreshButton.disabled = false;
+            refreshButton.textContent = "刷新";
+        }
+    }
+
+
+    // ============================================
+    // 显示当前节点
+    // ============================================
+
+    function renderCurrentNode(node) {
+
+        if (!node) {
+
+            currentNodeElement.textContent =
+                "暂无当前节点";
+
+            currentDotElement.className =
+                "status-dot error";
+
+            return;
+        }
+
+        currentNodeElement.textContent = node;
+
+        currentDotElement.className =
+            "status-dot";
+    }
+
+
+    // ============================================
+    // 显示节点列表
+    // ============================================
+
+    function renderNodeList(nodes, current) {
+
+        nodeListElement.innerHTML = "";
+
+        nodeCountElement.textContent =
+            `${nodes.length} 个节点`;
+
+        if (nodes.length === 0) {
+
+            nodeListElement.innerHTML = `
+                <div class="empty">
+                    PROXY 代理组没有节点
+                </div>
+            `;
+
+            return;
+        }
+
+        nodes.forEach((node, index) => {
+
+            const element =
+                document.createElement("div");
+
+            element.className =
+                "node" +
+                (node === current ? " current" : "");
+
+            const name =
+                document.createElement("div");
+
+            name.className = "node-name";
+
+            name.textContent = node;
+
+            const right =
+                document.createElement("div");
+
+            right.className = "node-right";
+
+            if (node === current) {
+
+                right.innerHTML =
+                    `<span class="current-label">当前</span>`;
+
+            } else {
+
+                right.innerHTML =
+                    `<span class="node-index">#${index + 1}</span>`;
+            }
+
+            element.appendChild(name);
+            element.appendChild(right);
+
+            element.addEventListener(
+                "click",
+                () => selectNode(node)
+            );
+
+            nodeListElement.appendChild(element);
+
+        });
+    }
+
+
+    // ============================================
+    // 切换节点
+    // ============================================
+
+    async function selectNode(node) {
+
+        if (!node) {
+            return;
+        }
+
+        if (node === currentNode) {
+            return;
+        }
+
+        try {
+
+            setLoadingState();
+
+            clearError();
+
+            /*
+             * Clash API：
+             *
+             * PUT /proxies/{proxy group}
+             *
+             * Body:
+             * {
+             *     "name": "节点名称"
+             * }
+             */
+
+            const response = await fetch(
+                `${API_BASE}/proxies/${encodeURIComponent(PROXY_GROUP)}`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        name: node
+                    })
+                }
+            );
+
+            if (!response.ok) {
+
+                let message =
+                    `HTTP ${response.status}`;
+
+                try {
+
+                    const text =
+                        await response.text();
+
+                    if (text) {
+                        message += `：${text}`;
+                    }
+
+                } catch (_) {}
+
+                throw new Error(message);
+            }
+
+            /*
+             * 切换成功后重新读取 API，
+             * 不直接假设切换成功。
+             */
+            await loadProxies();
+
+            setApiSuccess(
+                `已切换节点：${node}`
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            setApiError(
+                "节点切换失败"
+            );
+
+            showError(error);
+
+            // 重新读取一次真实状态
+            await loadProxies();
+
+        }
+    }
+
+
+    // ============================================
+    // Loading 状态
+    // ============================================
+
+    function setLoadingState() {
+
+        refreshButton.disabled = true;
+        refreshButton.textContent = "读取中...";
+
+        currentDotElement.className =
+            "status-dot loading";
+    }
+
+
+    // ============================================
+    // API 成功
+    // ============================================
+
+    function setApiSuccess(message) {
+
+        apiStatusElement.textContent =
+            message;
+
+        apiStatusElement.className =
+            "api-status success";
+    }
+
+
+    // ============================================
+    // API 错误
+    // ============================================
+
+    function setApiError(message) {
+
+        apiStatusElement.textContent =
+            message;
+
+        apiStatusElement.className =
+            "api-status error";
+    }
+
+
+    // ============================================
+    // 错误信息
+    // ============================================
+
+    function showError(error) {
+
+        errorMessageElement.innerHTML = "";
+
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "error-message";
+
+        /*
+         * 浏览器直接打开 file:// 页面时，
+         * fetch localhost API 可能遇到 CORS 限制。
+         *
+         * 这里给出比较明确的提示。
+         */
+
+        if (
+            error instanceof TypeError
+        ) {
+
+            div.textContent =
+                "浏览器无法访问 127.0.0.1:9090。"
+                + " 如果 Clash API 实际正常，请检查 CORS 配置，"
+                + " 或使用本地 HTTP 服务打开这个 HTML。";
+
+        } else {
+
+            div.textContent =
+                error.message || String(error);
+        }
+
+        errorMessageElement.appendChild(div);
+    }
+
+
+    // ============================================
+    // 清除错误
+    // ============================================
+
+    function clearError() {
+
+        errorMessageElement.innerHTML = "";
+    }
+
+
+    // ============================================
+    // 时间格式
+    // ============================================
+
+    function formatTime(date) {
+
+        return date.toLocaleTimeString(
+            "zh-CN",
+            {
+                hour12: false
+            }
+        );
+    }
+
+
+    // ============================================
+    // 启动
+    // ============================================
+
+    loadProxies();
+
+
+    // ============================================
+    // 自动刷新
+    // ============================================
+
+    setInterval(
+        loadProxies,
+        REFRESH_INTERVAL
+    );
+
+</script>
+
+</body>
+</html>
